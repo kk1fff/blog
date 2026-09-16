@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { allTags, getPost, listPosts, searchPosts, slugify, writePost } from "../packages/content-contract/dist/index.js";
+import { allTags, getPost, githubPagesWorkflow, listPosts, searchPosts, slugify, writePost } from "../packages/content-contract/dist/index.js";
 
 test("managed posts preserve ISO dates and supply searchable metadata", async () => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), "agentic-blog-test-"));
@@ -21,4 +21,13 @@ test("managed posts preserve ISO dates and supply searchable metadata", async ()
 test("slugify rejects empty structural names", () => {
   assert.equal(slugify("A Title, Again!"), "a-title-again");
   assert.throws(() => slugify("---"), /letter or number/);
+});
+
+test("GitHub Pages workflow uses the pinned engine and Pages artifact actions", () => {
+  const workflow = githubPagesWorkflow("main");
+  assert.match(workflow, /branches: \["main"\]/);
+  assert.match(workflow, /vars\.BLOG_ENGINE_REPOSITORY/);
+  assert.match(workflow, /actions\/upload-pages-artifact@v4/);
+  assert.match(workflow, /actions\/deploy-pages@v4/);
+  assert.doesNotMatch(workflow, /Cloudflare/);
 });

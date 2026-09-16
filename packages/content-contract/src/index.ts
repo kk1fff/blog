@@ -12,6 +12,7 @@ export interface BlogSettings {
   engine?: { repository: string; commit: string };
   publishing: { mode: DeliveryMode; productionBranch: string };
   cloudflare?: { projectName: string; productionBranch: string };
+  githubPages?: { productionBranch: string };
 }
 
 export interface Post {
@@ -136,4 +137,63 @@ export function allTags(posts: Post[]): string[] { return [...new Set(posts.flat
 export function searchPosts(posts: Post[], query: string): Post[] {
   const terms = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
   return posts.filter((post) => terms.every((term) => `${post.title} ${post.description} ${post.tags.join(" ")} ${post.body}`.toLowerCase().includes(term)));
+}
+
+export function githubPagesWorkflow(productionBranch: string): string {
+  return `name: Deploy blog to GitHub Pages
+
+on:
+  push:
+    branches: ["${productionBranch}"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      ENGINE_REPOSITORY: \${{ vars.BLOG_ENGINE_REPOSITORY }}
+      ENGINE_COMMIT: \${{ vars.BLOG_ENGINE_COMMIT }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: content
+      - uses: actions/configure-pages@v5
+      - name: Check out pinned engine
+        run: |
+          test -n "$ENGINE_REPOSITORY" && test -n "$ENGINE_COMMIT"
+          git clone "$ENGINE_REPOSITORY" engine
+          git -C engine checkout "$ENGINE_COMMIT"
+      - name: Build static site
+        working-directory: engine
+        env:
+          BLOG_CONTENT_DIR: \${{ github.workspace }}/content
+          BLOG_OUTPUT_DIR: \${{ github.workspace }}/engine/.agentic-blog/github-pages-dist
+        run: |
+          npm ci
+          npm run build
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: engine/.agentic-blog/github-pages-dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: \${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+`;
 }

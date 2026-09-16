@@ -5,7 +5,7 @@ import { promisify } from "node:util";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { allTags, contentDir, deletePost, getPost, listPosts, readSettings, searchPosts, slugify, writePost, writeSettings } from "@agentic-blog/content-contract";
+import { allTags, contentDir, deletePost, getPost, githubPagesWorkflow, listPosts, readSettings, searchPosts, slugify, writePost, writeSettings } from "@agentic-blog/content-contract";
 
 const exec = promisify(execFile);
 const dir = contentDir();
@@ -22,6 +22,10 @@ async function gitStatus() {
 async function ensureRepo() {
   try { await git(["rev-parse", "--is-inside-work-tree"]); }
   catch { throw new Error("static_content is not a Git repository. Run the setup skill first."); }
+}
+async function hasStagedChanges() {
+  try { await git(["diff", "--cached", "--quiet"]); return false; }
+  catch { return true; }
 }
 
 const server = new McpServer({ name: "agentic-blog-content", version: "0.1.0" });
@@ -66,12 +70,25 @@ server.tool("set_publishing_policy", "Set future publishing mode to direct push,
 server.tool("configure_cloudflare", "Record a Cloudflare Pages project; credentials stay in GitHub secrets.", { projectName: z.string().min(1), productionBranch: z.string().default("main") }, async ({ projectName, productionBranch }) => {
   const settings = await readSettings(dir); settings.cloudflare = { projectName, productionBranch }; settings.publishing.productionBranch = productionBranch; await writeSettings(settings, dir); return text(settings.cloudflare);
 });
+server.tool("configure_github_pages", "Replace the managed deployment workflow with the fixed GitHub Pages build and deploy workflow.", {
+  productionBranch: z.string().regex(/^[A-Za-z0-9._/-]+$/).default("main"), confirm: z.literal(true)
+}, async ({ productionBranch }) => {
+  const workflowDir = path.join(dir, ".github", "workflows");
+  await fs.mkdir(workflowDir, { recursive: true });
+  await fs.writeFile(path.join(workflowDir, "deploy.yml"), githubPagesWorkflow(productionBranch), "utf8");
+  const settings = await readSettings(dir);
+  settings.githubPages = { productionBranch };
+  settings.publishing.productionBranch = productionBranch;
+  await writeSettings(settings, dir);
+  return text({ provider: "github-pages", workflow: ".github/workflows/deploy.yml", productionBranch });
+});
 server.tool("configure_remote", "Set the content repository origin remote.", { url: z.string().min(1) }, async ({ url }) => { await ensureRepo(); try { await git(["remote", "set-url", "origin", url]); } catch { await git(["remote", "add", "origin", url]); } return text({ origin: await git(["remote", "get-url", "origin"]) }); });
 server.tool("commit_and_publish", "Commit changes and publish with the configured direct-push or PR policy.", { message: z.string().min(1), mode: z.enum(["push", "pr"]).optional() }, async ({ message, mode }) => {
   await ensureRepo(); const settings = await readSettings(dir); const delivery = mode || settings.publishing.mode; if (delivery === "unset") throw new Error("Publishing policy is unset. Ask the user whether they prefer push or pr, then call set_publishing_policy.");
   const branch = delivery === "pr" ? `agent/${new Date().toISOString().replace(/[:.]/g, "-")}` : settings.publishing.productionBranch;
+  await git(["pull", "--rebase", "--autostash", "origin", settings.publishing.productionBranch]);
   if (delivery === "pr") await git(["switch", "-c", branch]);
-  await git(["add", "-A"]); await git(["commit", "-m", message]);
+  await git(["add", "-A"]); if (await hasStagedChanges()) await git(["commit", "-m", message]);
   if (delivery === "push") { await git(["push", "origin", settings.publishing.productionBranch]); return text({ mode: "push", branch: settings.publishing.productionBranch }); }
   await git(["push", "-u", "origin", branch]); const result = await exec("gh", ["pr", "create", "--fill", "--base", settings.publishing.productionBranch], { cwd: dir }); return text({ mode: "pr", branch, url: result.stdout.trim() });
 });
