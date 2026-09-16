@@ -1,0 +1,8 @@
+{
+  "name": "@agentic-blog/preview-mcp",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": { "build": "tsc -p tsconfig.json" },
+  "dependencies": { "@modelcontextprotocol/sdk": "^1.30.0", "playwright": "^1.63.0", "zod": "^3.24.3" }
+}

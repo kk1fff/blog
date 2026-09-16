@@ -1,0 +1,9 @@
+---
+import Base from "../../layouts/Base.astro";
+import PostCard from "../../components/PostCard.astro";
+import { allTags, listPosts } from "@agentic-blog/content-contract";
+export async function getStaticPaths() { const posts = await listPosts(); return allTags(posts).map((tag) => ({ params: { tag } })); }
+const tag = Astro.params.tag!;
+const posts = (await listPosts()).filter((post) => post.tags.includes(tag));
+---
+<Base title={`#${tag}`}><h1>#{tag}</h1><section class="post-list">{posts.map((post) => <PostCard post={post} />)}</section></Base>

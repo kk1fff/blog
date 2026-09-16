@@ -1,0 +1,41 @@
+name: Deploy blog to Cloudflare Pages
+
+on:
+  push:
+    branches: ["**"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    env:
+      ENGINE_REPOSITORY: ${{ vars.BLOG_ENGINE_REPOSITORY }}
+      ENGINE_COMMIT: ${{ vars.BLOG_ENGINE_COMMIT }}
+      CLOUDFLARE_PROJECT_NAME: ${{ vars.CLOUDFLARE_PROJECT_NAME }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: content
+      - name: Check out pinned engine
+        run: |
+          test -n "$ENGINE_REPOSITORY" && test -n "$ENGINE_COMMIT" && test -n "$CLOUDFLARE_PROJECT_NAME"
+          git clone "$ENGINE_REPOSITORY" engine
+          git -C engine checkout "$ENGINE_COMMIT"
+      - name: Build static site
+        working-directory: engine
+        env:
+          BLOG_CONTENT_DIR: ${{ github.workspace }}/content
+          BLOG_OUTPUT_DIR: ${{ github.workspace }}/engine/.agentic-blog/cloudflare-dist
+        run: |
+          npm ci
+          npm run build
+      - name: Deploy
+        working-directory: engine
+        run: |
+          BRANCH="${GITHUB_REF_NAME//\//-}"
+          if [ "$GITHUB_REF_NAME" = "main" ]; then npx wrangler pages deploy .agentic-blog/cloudflare-dist --project-name "$CLOUDFLARE_PROJECT_NAME"; else npx wrangler pages deploy .agentic-blog/cloudflare-dist --project-name "$CLOUDFLARE_PROJECT_NAME" --branch "$BRANCH"; fi

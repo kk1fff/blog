@@ -1,0 +1,6 @@
+---
+import Base from "../../layouts/Base.astro";
+import { allTags, listPosts } from "@agentic-blog/content-contract";
+const tags = allTags(await listPosts());
+---
+<Base title="Tags"><h1>Tags</h1><div class="tags">{tags.map((tag) => <a href={`/tags/${tag}`}>#{tag}</a>)}</div></Base>

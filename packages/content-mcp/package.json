@@ -1,0 +1,12 @@
+{
+  "name": "@agentic-blog/content-mcp",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": { "build": "tsc -p tsconfig.json" },
+  "dependencies": {
+    "@agentic-blog/content-contract": "0.1.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.24.3"
+  }
+}

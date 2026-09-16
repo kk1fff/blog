@@ -1,0 +1,8 @@
+site:
+  title: My Agentic Blog
+  description: A blog maintained with an agent.
+  language: en
+theme: paper
+publishing:
+  mode: unset
+  productionBranch: main

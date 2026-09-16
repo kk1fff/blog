@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.astro/
+playwright-report/
+test-results/
+.agentic-blog/
+static_content/
+*.log

@@ -1,0 +1,11 @@
+---
+import "../styles/global.css";
+import { readSettings } from "@agentic-blog/content-contract";
+const settings = await readSettings();
+const { title = settings.site.title } = Astro.props;
+---
+<!doctype html>
+<html lang={settings.site.language} class={settings.theme}>
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>{title} · {settings.site.title}</title><meta name="description" content={settings.site.description} /></head>
+  <body><div class="shell"><header><a class="brand" href="/">{settings.site.title}</a><p class="tagline">{settings.site.description}</p><nav><a href="/">Posts</a><a href="/tags">Tags</a><a href="/search">Search</a></nav></header><main><slot /></main></div></body>
+</html>

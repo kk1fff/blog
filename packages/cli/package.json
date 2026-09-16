@@ -1,0 +1,8 @@
+{
+  "name": "@agentic-blog/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": { "blog": "./dist/index.js" },
+  "scripts": { "build": "tsc -p tsconfig.json" },
+  "dependencies": { "@agentic-blog/content-contract": "0.1.0" }
+}
