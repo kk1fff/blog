@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -21,6 +22,26 @@ async function ensureMcp() {
   }
   return { contentName, previewName };
 }
+async function installSkills() {
+  const codexHome = process.env.CODEX_HOME || path.join(os.homedir(), ".codex");
+  const skillsHome = path.join(codexHome, "skills");
+  await fs.mkdir(skillsHome, { recursive: true });
+  const installed: string[] = [];
+  for (const name of ["agentic-blog-setup", "agentic-blog-content"]) {
+    const source = path.join(root, "skills", name);
+    const destination = path.join(skillsHome, name);
+    try {
+      const entry = await fs.lstat(destination);
+      if (!entry.isSymbolicLink()) throw new Error(`Codex skill '${name}' already exists at ${destination}; refusing to replace it.`);
+      if (await fs.realpath(destination) !== await fs.realpath(source)) throw new Error(`Codex skill '${name}' points to another project; refusing to replace it.`);
+    } catch (error: any) {
+      if (error.code !== "ENOENT") throw error;
+      await fs.symlink(source, destination, "dir");
+    }
+    installed.push(destination);
+  }
+  return installed;
+}
 async function setup() {
   await fs.mkdir(path.join(root, ".agentic-blog"), { recursive: true });
   const createdContent = !(await exists(content));
@@ -29,8 +50,9 @@ async function setup() {
     await command("git", ["init", "-b", "main", content]);
   }
   await command("npx", ["playwright", "install", "chromium"]);
+  const skills = await installSkills();
   const mcp = await ensureMcp();
-  console.log(JSON.stringify({ root, content, createdContent, mcp, next: "Use $agentic-blog-setup to finish GitHub and Cloudflare configuration." }, null, 2));
+  console.log(JSON.stringify({ root, content, createdContent, skills, mcp, next: "Restart Codex, then use $agentic-blog-setup to finish GitHub and Cloudflare configuration." }, null, 2));
 }
 async function doctor() {
   const report: Record<string, unknown> = { root, content, contentRepository: await exists(path.join(content, ".git")), blogSettings: await exists(path.join(content, "blog.yaml")), packagesBuilt: await exists(path.join(root, "packages/content-mcp/dist/index.js")) };
