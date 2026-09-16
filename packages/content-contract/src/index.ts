@@ -6,8 +6,14 @@ import { parse, stringify } from "yaml";
 export type DeliveryMode = "unset" | "push" | "pr";
 export type ThemeId = "paper" | "journal" | "mono";
 
+export interface AuthorProfile {
+  greeting: string;
+  bio: string;
+  links?: { github?: string; linkedin?: string };
+}
+
 export interface BlogSettings {
-  site: { title: string; description: string; language: string; baseUrl?: string };
+  site: { title: string; description: string; language: string; baseUrl?: string; author?: AuthorProfile };
   theme: ThemeId;
   engine?: { repository: string; commit: string };
   publishing: { mode: DeliveryMode; productionBranch: string };
@@ -55,7 +61,7 @@ export async function readSettings(dir = contentDir()): Promise<BlogSettings> {
     return {
       ...defaultSettings,
       ...parsed,
-      site: { ...defaultSettings.site, ...parsed.site },
+      site: { ...defaultSettings.site, ...parsed.site, author: parsed.site?.author },
       publishing: { ...defaultSettings.publishing, ...parsed.publishing }
     };
   } catch (error: any) {

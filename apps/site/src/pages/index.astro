@@ -3,5 +3,20 @@ import Base from "../layouts/Base.astro";
 import PostCard from "../components/PostCard.astro";
 import { listPosts, readSettings } from "@agentic-blog/content-contract";
 const [posts, settings] = await Promise.all([listPosts(), readSettings()]);
+const author = settings.site.author;
 ---
-<Base title={settings.site.title}><p class="meta">{posts.length} published {posts.length === 1 ? "post" : "posts"}</p><section class="post-list">{posts.map((post) => <PostCard post={post} />)}</section></Base>
+<Base title={settings.site.title}>
+  {author && <section class="intro" aria-labelledby="intro-heading">
+    <p class="eyebrow">Independent notes on software</p>
+    <h1 id="intro-heading">{author.greeting}</h1>
+    <p class="bio">{author.bio}</p>
+    {(author.links?.github || author.links?.linkedin) && <div class="profile-links" aria-label="Profile links">
+      {author.links?.github && <a href={author.links.github} rel="noopener noreferrer" target="_blank">GitHub <span aria-hidden="true">↗</span></a>}
+      {author.links?.linkedin && <a href={author.links.linkedin} rel="noopener noreferrer" target="_blank">LinkedIn <span aria-hidden="true">↗</span></a>}
+    </div>}
+  </section>}
+  <section class="writing" aria-labelledby="writing-heading">
+    <div class="section-heading"><h2 id="writing-heading">Latest writing</h2><span>{posts.length} posts</span></div>
+    <div class="post-list">{posts.map((post) => <PostCard post={post} />)}</div>
+  </section>
+</Base>

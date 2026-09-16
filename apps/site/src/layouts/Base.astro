@@ -6,6 +6,23 @@ const { title = settings.site.title } = Astro.props;
 ---
 <!doctype html>
 <html lang={settings.site.language} class={settings.theme}>
-  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>{title} · {settings.site.title}</title><meta name="description" content={settings.site.description} /></head>
-  <body><div class="shell"><header><a class="brand" href="/">{settings.site.title}</a><p class="tagline">{settings.site.description}</p><nav><a href="/">Posts</a><a href="/tags">Tags</a><a href="/search">Search</a></nav></header><main><slot /></main></div></body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{title} · {settings.site.title}</title>
+    <meta name="description" content={settings.site.description} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="site-header">
+        <a class="brand" href="/">{settings.site.title}</a>
+        <nav aria-label="Primary navigation"><a href="/">Writing</a><a href="/tags">Topics</a><a href="/search">Search</a></nav>
+      </header>
+      <main><slot /></main>
+      <footer><span>© {new Date().getFullYear()} {settings.site.title}</span><a href="/tags">Browse topics</a></footer>
+    </div>
+  </body>
 </html>
