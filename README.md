@@ -24,6 +24,8 @@ npm run setup
 After the setup command completes, restart Codex to make `$agentic-blog-setup`
 and `$agentic-blog-content` available as optional shortcuts. The setup skill
 then creates or connects the content repository, configures MCPs, and guides
-GitHub and Cloudflare Pages setup.
+GitHub Pages setup. GitHub Pages is the default production host; Cloudflare
+Pages is an explicit alternative, while Cloudflare Web Analytics can be used
+without moving the site from GitHub Pages.
 
 For local development after setup, use `npm run dev` with `BLOG_CONTENT_DIR` set to the content repository if it is outside the default `static_content/` directory.

@@ -12,6 +12,13 @@ Run the setup skill's local dependency and MCP-registration steps. Once those
 finish, `$agentic-blog-setup` and `$agentic-blog-content` become available as
 convenience shortcuts after Codex restarts.
 
+## Deployment default
+
+GitHub Pages is the primary production host. Configure it through the Content
+MCP and preserve its pinned-engine workflow. Use Cloudflare Pages only when a
+user explicitly asks to host there. Cloudflare Web Analytics is compatible
+with GitHub Pages and does not change the hosting provider.
+
 ## Ongoing use
 
 For routine content work, read and follow
