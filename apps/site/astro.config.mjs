@@ -7,10 +7,13 @@ const content = path.resolve(process.env.BLOG_CONTENT_DIR || path.join(process.c
 export default defineConfig({
   output: "static",
   outDir: process.env.BLOG_OUTPUT_DIR || "./dist",
-  hooks: {
-    "astro:build:done": async ({ dir }) => {
-      try { await fs.cp(path.join(content, "assets"), path.join(fileURLToPath(dir), "assets"), { recursive: true }); }
-      catch (error) { if (error?.code !== "ENOENT") throw error; }
+  integrations: [{
+    name: "copy-content-assets",
+    hooks: {
+      "astro:build:done": async ({ dir }) => {
+        try { await fs.cp(path.join(content, "assets"), path.join(fileURLToPath(dir), "assets"), { recursive: true }); }
+        catch (error) { if (error?.code !== "ENOENT") throw error; }
+      }
     }
-  }
+  }]
 });
