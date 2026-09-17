@@ -29,5 +29,6 @@ test("GitHub Pages workflow uses the pinned engine and Pages artifact actions", 
   assert.match(workflow, /vars\.BLOG_ENGINE_REPOSITORY/);
   assert.match(workflow, /actions\/upload-pages-artifact@v4/);
   assert.match(workflow, /actions\/deploy-pages@v4/);
+  assert.match(workflow, /vars\.CLOUDFLARE_WEB_ANALYTICS_TOKEN/);
   assert.doesNotMatch(workflow, /Cloudflare/);
 });

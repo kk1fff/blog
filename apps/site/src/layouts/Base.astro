@@ -3,6 +3,7 @@ import "../styles/global.css";
 import { readSettings } from "@agentic-blog/content-contract";
 const settings = await readSettings();
 const { title = settings.site.title } = Astro.props;
+const cloudflareWebAnalyticsToken = import.meta.env.PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN;
 ---
 <!doctype html>
 <html lang={settings.site.language} class={settings.theme}>
@@ -14,6 +15,7 @@ const { title = settings.site.title } = Astro.props;
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    {cloudflareWebAnalyticsToken && <script is:inline type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon={JSON.stringify({ token: cloudflareWebAnalyticsToken })}></script>}
   </head>
   <body>
     <div class="shell">
@@ -22,7 +24,7 @@ const { title = settings.site.title } = Astro.props;
         <nav aria-label="Primary navigation"><a href="/">Writing</a><a href="/tags">Topics</a><a href="/search">Search</a></nav>
       </header>
       <main><slot /></main>
-      <footer><span>© {new Date().getFullYear()} {settings.site.title}</span><a href="/tags">Browse topics</a></footer>
+      <footer><span>© {new Date().getFullYear()} {settings.site.title}</span><div class="footer-links"><a href="/tags">Browse topics</a><a href="/privacy">Privacy</a></div></footer>
     </div>
   </body>
 </html>

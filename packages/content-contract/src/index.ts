@@ -183,6 +183,7 @@ jobs:
         env:
           BLOG_CONTENT_DIR: \${{ github.workspace }}/content
           BLOG_OUTPUT_DIR: \${{ github.workspace }}/engine/.agentic-blog/github-pages-dist
+          PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN: \${{ vars.CLOUDFLARE_WEB_ANALYTICS_TOKEN }}
         run: |
           npm ci
           npm run build
