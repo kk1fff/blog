@@ -26,3 +26,5 @@ For routine content work, read and follow
 
 Agents must use the Content MCP for all changes inside `static_content/` and
 must inspect desktop and phone previews through the Preview MCP before publishing.
+For any engine or site-code change that can affect rendered pages, agents must
+also run those desktop and phone Preview MCP checks before handoff or publishing.

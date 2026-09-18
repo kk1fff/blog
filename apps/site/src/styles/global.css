@@ -37,6 +37,9 @@ h2 { margin:0; font-size:1rem; font-weight:800; letter-spacing:-.018em; }
 .prose { font-size:1.08rem; }
 .prose img { max-width:100%; height:auto; }
 .prose pre { overflow:auto; padding:16px; background:#eef2f7; font-family:ui-monospace, monospace; font-size:.8em; }
+.comments { border-top:1px solid var(--line); margin-top:56px; padding-top:28px; }
+.comments h2 { font-size:1.25rem; margin:0 0 20px; }
+.comments .giscus, .comments .giscus-frame { width:100%; }
 .toc { position:sticky; top:24px; align-self:start; border-left:1px solid var(--line); padding-left:16px; font-size:.9rem; }
 .toc ul { margin:0; padding-left:16px; }
 .search { width:100%; padding:12px; font:inherit; border:1px solid var(--line); background:var(--surface); }

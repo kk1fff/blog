@@ -1,12 +1,14 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { getPost, listPosts } from "@agentic-blog/content-contract";
+import GiscusComments from "../../components/GiscusComments.astro";
+import { getPost, listPosts, readSettings } from "@agentic-blog/content-contract";
 import { marked } from "marked";
 export async function getStaticPaths() { return (await listPosts()).map((post) => ({ params: { slug: post.slug } })); }
 const post = await getPost(Astro.params.slug!);
 if (!post) return new Response(null, { status: 404 });
+const settings = await readSettings();
 const headings = [...post.body.matchAll(/^(#{2,3})\s+(.+)$/gm)].map((match) => ({ level: match[1].length, text: match[2], id: match[2].toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") }));
 marked.use({ renderer: { heading({ tokens, depth }) { const text = this.parser.parseInline(tokens); const id = text.replace(/<[^>]+>/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); return `<h${depth} id="${id}">${text}</h${depth}>`; } } });
 const html = await marked.parse(post.body);
 ---
-<Base title={post.title}><div class="post-layout"><article class="prose"><p class="meta"><time datetime={post.publishedAt}>{new Date(post.publishedAt).toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" })}</time>{post.updatedAt && ` · updated ${new Date(post.updatedAt).toLocaleDateString()}`}</p><h1>{post.title}</h1><div class="tags">{post.tags.map((tag) => <a href={`/tags/${tag}`}>#{tag}</a>)}</div><Fragment set:html={html} /></article>{headings.length > 0 && <details class="toc" open><summary>On this page</summary><ul>{headings.map((heading) => <li class={`level-${heading.level}`}><a href={`#${heading.id}`}>{heading.text}</a></li>)}</ul></details>}</div><script>if (window.matchMedia('(max-width: 760px)').matches) document.querySelectorAll('details.toc').forEach((toc) => toc.removeAttribute('open'));</script></Base>
+<Base title={post.title}><div class="post-layout"><article class="prose"><p class="meta"><time datetime={post.publishedAt}>{new Date(post.publishedAt).toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" })}</time>{post.updatedAt && ` · updated ${new Date(post.updatedAt).toLocaleDateString()}`}</p><h1>{post.title}</h1><div class="tags">{post.tags.map((tag) => <a href={`/tags/${tag}`}>#{tag}</a>)}</div><Fragment set:html={html} />{settings.comments?.giscus && <GiscusComments config={settings.comments.giscus} theme={settings.theme} />}</article>{headings.length > 0 && <details class="toc" open><summary>On this page</summary><ul>{headings.map((heading) => <li class={`level-${heading.level}`}><a href={`#${heading.id}`}>{heading.text}</a></li>)}</ul></details>}</div><script>if (window.matchMedia('(max-width: 760px)').matches) document.querySelectorAll('details.toc').forEach((toc) => toc.removeAttribute('open'));</script></Base>

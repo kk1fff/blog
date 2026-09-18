@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { allTags, getPost, githubPagesWorkflow, listPosts, searchPosts, slugify, writePost } from "../packages/content-contract/dist/index.js";
+import { allTags, getPost, githubPagesWorkflow, listPosts, readSettings, searchPosts, slugify, writePost, writeSettings } from "../packages/content-contract/dist/index.js";
 
 test("managed posts preserve ISO dates and supply searchable metadata", async () => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), "agentic-blog-test-"));
@@ -21,6 +21,16 @@ test("managed posts preserve ISO dates and supply searchable metadata", async ()
 test("slugify rejects empty structural names", () => {
   assert.equal(slugify("A Title, Again!"), "a-title-again");
   assert.throws(() => slugify("---"), /letter or number/);
+});
+
+test("Giscus settings are optional and survive a managed settings round trip", async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "agentic-blog-settings-"));
+  assert.equal((await readSettings(directory)).comments, undefined);
+  const settings = await readSettings(directory);
+  settings.comments = { giscus: { repo: "kk1fff/blog-content", repoId: "R_kgDOUc8BTw", category: "Announcements", categoryId: "DIC_kwDOUc8BT84DF13p" } };
+  await writeSettings(settings, directory);
+  assert.deepEqual((await readSettings(directory)).comments, settings.comments);
+  await fs.rm(directory, { recursive: true, force: true });
 });
 
 test("GitHub Pages workflow uses the pinned engine and Pages artifact actions", () => {

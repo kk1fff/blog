@@ -12,9 +12,17 @@ export interface AuthorProfile {
   links?: { github?: string; linkedin?: string };
 }
 
+export interface GiscusSettings {
+  repo: string;
+  repoId: string;
+  category: string;
+  categoryId: string;
+}
+
 export interface BlogSettings {
   site: { title: string; description: string; language: string; baseUrl?: string; author?: AuthorProfile };
   theme: ThemeId;
+  comments?: { giscus: GiscusSettings };
   engine?: { repository: string; commit: string };
   publishing: { mode: DeliveryMode; productionBranch: string };
   cloudflare?: { projectName: string; productionBranch: string };
