@@ -33,6 +33,9 @@ h2 { margin:0; font-size:1rem; font-weight:800; letter-spacing:-.018em; }
 .post-copy p { color:var(--muted); font-size:.97rem; line-height:1.65; margin:10px 0 16px; max-width:650px; }
 .tags { display:flex; gap:7px; flex-wrap:wrap; }
 .tags a { background:var(--tag); border-radius:6px; color:var(--accent-hover); font-size:.73rem; font-weight:600; padding:3px 8px; text-decoration:none; }
+.discussion-bar { align-items:center; border-top:1px solid var(--line); color:var(--muted); display:flex; font-size:.78rem; font-weight:600; justify-content:space-between; margin-top:20px; padding-top:14px; text-decoration:none; }
+.discussion-bar span:last-child { color:var(--accent-hover); }
+.discussion-bar:hover { color:var(--ink); }
 .post-layout { display:grid; grid-template-columns:minmax(0, 720px) 220px; gap:72px; }
 .prose { font-size:1.08rem; }
 .prose img { max-width:100%; height:auto; }

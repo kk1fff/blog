@@ -17,6 +17,7 @@ const author = settings.site.author;
   </section>}
   <section class="writing" aria-labelledby="writing-heading">
     <div class="section-heading"><h2 id="writing-heading">Latest writing</h2><span>{posts.length} posts</span></div>
-    <div class="post-list">{posts.map((post) => <PostCard post={post} />)}</div>
+    <div class="post-list" data-giscus-repo={settings.comments?.giscus.repo} data-giscus-category={settings.comments?.giscus.category}>{posts.map((post) => <PostCard post={post} commentsEnabled={Boolean(settings.comments?.giscus)} />)}</div>
   </section>
+  <script>import { hydrateDiscussionCounts } from "../scripts/discussion-counts.mjs"; hydrateDiscussionCounts();</script>
 </Base>
