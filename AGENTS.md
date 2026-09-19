@@ -24,6 +24,9 @@ with GitHub Pages and does not change the hosting provider.
 For routine content work, read and follow
 [`skills/agentic-blog-content/SKILL.md`](skills/agentic-blog-content/SKILL.md).
 
+For a blog favicon, compact logo, or header brand mark, read and follow
+[`skills/agentic-blog-icon-design/SKILL.md`](skills/agentic-blog-icon-design/SKILL.md).
+
 Agents must use the Content MCP for all changes inside `static_content/` and
 must inspect desktop and phone previews through the Preview MCP before publishing.
 For any engine or site-code change that can affect rendered pages, agents must

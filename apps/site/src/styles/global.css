@@ -6,7 +6,8 @@ a { color:inherit; text-decoration-color:color-mix(in srgb, var(--accent) 72%, t
 a:hover { color:var(--accent-hover); }
 .shell { max-width:940px; padding:0 28px; margin:0 auto; }
 .site-header { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); padding:25px 0 20px; }
-.brand { text-decoration:none; font-family:var(--heading); font-size:1.02rem; font-weight:800; letter-spacing:-.045em; }
+.brand { align-items:center; display:inline-flex; gap:8px; text-decoration:none; font-family:var(--heading); font-size:1.02rem; font-weight:800; letter-spacing:-.045em; }
+.brand-mark { display:block; flex:none; height:22px; width:22px; }
 nav { display:flex; gap:22px; font-size:.8rem; font-weight:600; }
 nav a { color:var(--muted); text-decoration:none; }
 nav a:first-child { color:var(--ink); }
