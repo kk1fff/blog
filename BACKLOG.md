@@ -2,15 +2,15 @@
 
 ## Streamline publish process
 
-Status: planned
+Status: implemented locally; production rollout and cross-device validation pending
 
 Build an article management system through the Content and Preview MCPs, with
 a deterministic process for creating articles, staging previews, reviewing
 revisions, publishing, and updating previously published articles.
 
-The current preview build excludes drafts, requiring the agent to temporarily
-change an article's draft status to preview it. Replace this workaround with
-an explicit staging operation and a documented article lifecycle.
+Local workspace previews include drafts; production candidates are staged
+separately. Article availability is draft/published, with review and deployment
+progress tracked independently.
 
 ### Intended workflow
 
@@ -43,3 +43,21 @@ an explicit staging operation and a documented article lifecycle.
   draft-status preview workaround.
 - Verify the lifecycle for a new article and an update to a published article,
   including revision after feedback and recovery from an interrupted operation.
+
+### Implementation
+
+The two existing MCP servers implement the lifecycle without adding overlapping
+publication or article-status tools. `commit_and_publish`, `blog_status`,
+`list_posts`, `get_post`, and `render_page` are extended. New operations cover
+staging, explicit approval, and browser-preview management. See
+[the article workflow](docs/article-workflow.md) for architecture, interfaces,
+recovery, and upgrade instructions.
+
+Production rollout requires a reviewed pushed engine pin and regenerated managed
+workflow. A browser check from another Tailscale-connected device and disposable
+GitHub Pages end-to-end deployment remain external validation steps.
+
+The status refactor separates draft/published availability from publishing
+execution, keeps published articles public during edits, adds pending-change
+tracking, and migrates lifecycle storage to v2. Local workspace previews include
+drafts throughout navigation and search; staged review remains revision-specific.

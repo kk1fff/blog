@@ -5,22 +5,93 @@ description: Create, update, review, and publish posts for the configured agenti
 
 # Agentic Blog Content
 
-Use Content MCP for every read and mutation in `static_content/`; never edit its files directly.
+Use Content MCP for every read and mutation in `static_content/`; never edit its
+files directly. The complete architecture, interfaces, and recovery behavior are
+in [the article workflow](../../docs/article-workflow.md).
 
-1. Read site settings and relevant posts through Content MCP before making changes.
-2. Create or update posts, assets, tags, theme settings, and publishing policy only through Content MCP. Reference a managed asset in Markdown as `/assets/<filename>`.
-3. Render every changed route with Preview MCP in both `desktop` and `phone` viewports. Inspect the returned screenshots for content, layout, navigation, and table-of-contents issues.
-4. For every post creation or update, provide a chat review before publishing. Summarize the proposed title, description, tags, draft status, and substantive changes; include the full draft or a clear patch when the user needs to judge the wording.
-5. For every new or changed diagram, include a text representation in the chat review. Use the diagram source when it is readable (such as Mermaid), otherwise provide a concise node-and-connection description and the image alt text. Do not make the user rely only on a screenshot to review a diagram.
-6. Do not call `commit_and_publish` until the user explicitly approves the reviewed version in the chat. A request to create or edit a post is not approval to publish. If the user asks to publish without having reviewed the current version, show the review first and wait.
-7. Before the first approved publish, ask whether the user wants direct push or a pull request and persist the selection with `set_publishing_policy`. The saved delivery policy applies only after the review approval.
-8. For deletions, obtain clear user intent and pass the required confirmation flag.
+1. Resume with `blog_status` and `list_posts({pendingOnly: true})`. Read relevant
+   posts/settings through Content MCP. `get_post` returns working/live revisions,
+   draft/published availability, pending changes, separate publishing progress,
+   and the next required action. Published articles stay published during edits.
+2. Create/update posts, assets, tags, theme settings, and publishing policy only
+   through Content MCP. New posts default to drafts. Reference managed assets as
+   `/assets/<filename>`. Updates preserve article identity and URL.
+3. Call `stage_article({slug, assetPaths?})` and retain its `stagedRevisionId`.
+   Staging freezes the article, dependencies, production baseline, configuration,
+   and pinned engine. It never changes the working draft flag or deploys content.
+   Supply extra managed asset paths for dependencies not discoverable in markup.
+4. Call `open_preview` for the snapshot. Return the complete clickable browser
+   URLs, Tailscale first, and the revision identifier. Keep the listener running
+   while the user reviews and the conversation continues. Use `preview_status`,
+   `close_preview`, and `stop_preview_server` to manage listeners. Saved builds
+   survive MCP shutdown and can be reopened; listeners do not survive shutdown.
+5. For every new/updated article, call `render_page` with that `stagedRevisionId`
+   for both `desktop` and `phone`, using its article route. Inspect returned
+   screenshots for content, layout, navigation, assets, and table-of-contents
+   issues. For site/engine work, omit the revision and render every affected
+   route in both viewports.
+6. Present a chat review before publishing. Identify the staged revision;
+   summarize title, description, tags, and changes, including full wording or a
+   clear patch where needed. For diagrams, include readable source or a concise
+   node/connection description and alt text. Browser screenshots alone are not
+   a wording/diagram review.
+7. Feedback creates a new revision. Repeat staging, viewport checks, and review.
+   After the user explicitly approves the current reviewed revision in chat,
+   call `approve_article`. An edit request or initial request to publish does not
+   substitute for reviewing the current version. Do not approve or publish a
+   changed/stale revision.
+8. If publishing policy is unset, ask whether the user wants direct push or a PR
+   and persist the choice with `set_publishing_policy`. Otherwise use the saved
+   policy without asking again. After review approval, call
+   `commit_and_publish({stagedRevisionId, message})`. The provider-specific actions
+   happen inside Content MCP; do not replace them with ad hoc Git/deploy commands.
+9. Retain the returned `publicationId`. Refresh with
+   `blog_status({publicationId, refresh: true})` until the selected publication
+   is `succeeded` after live verification. A push is not live verification;
+   a PR waits for merge. Continue the conversation between
+   bounded checks. Report workflow/PR links and failures. Resume interrupted or
+   retryable operations with `commit_and_publish({publicationId, message})`.
+10. For deletions, obtain clear user intent and pass the confirmation flag.
+    Deleting a working post does not delete the public article. Production
+    article deletion is outside this lifecycle publisher's first version.
+
+## Local workspace previews and status
+
+`open_preview()` builds the current workspace with all drafts and published
+articles visible in navigation, article routes, tags, and search. Use its
+`previewId` with `render_page`, `preview_status`, or `close_preview`. Reopen after
+edits for an updated build. Workspace screenshots do not satisfy staged approval.
+
+Article status is only `draft` or `published`; use `hasPendingChanges`,
+`publishing.status`, and `nextAction` to resume work. Filter `list_posts` using
+`status` for availability or `publishingStatus` for execution. `blog_status`
+returns separate article and publishing counts. Legacy live verification may be
+`unknown`; it is not a third article status. Frontmatter's draft flag is build
+metadata and does not publish or unpublish an article.
+
+## Site settings and setup publication
+
+Review settings/assets/workflow changes in chat and inspect affected desktop and
+phone pages before publishing. Use `commit_and_publish({paths, message})` with
+exact non-article paths. Message-only calls and implicit inclusion of all pending
+changes are disabled. Article Markdown and article assets require a staged
+revision; they cannot bypass review through `paths`.
 
 ## Coupled engine and content deployments
 
-When a layout, template, or content-contract change must reach a GitHub Pages site that builds the content repository against `BLOG_ENGINE_REPOSITORY` and `BLOG_ENGINE_COMMIT`:
+For engine/layout changes on GitHub Pages:
 
-1. Build, commit, and push the engine/code repository first; record its pushed commit SHA.
-2. Update the content repository’s `BLOG_ENGINE_COMMIT` GitHub variable to that SHA. Do not rely on a content push alone: the deployment otherwise builds the prior pinned engine.
-3. Commit and publish the managed static content only after the user approves it. Then dispatch or confirm the GitHub Pages workflow uses the updated pin.
-4. Wait for a successful deployment and verify the live page contains a distinctive change from the new template. If the browser still serves an old root page, check cache headers and use a versioned query string to distinguish CDN caching from a failed deployment.
+1. Build and validate the engine; inspect desktop and phone previews. Obtain
+   approval of the concrete reviewed rollout before publishing it.
+2. Push the engine, record its pushed SHA, and set the content repository's
+   `BLOG_ENGINE_COMMIT` variable to that SHA. Never pin an unpushed commit.
+3. Reconnect MCP clients when tool definitions change. Regenerate a legacy
+   managed workflow through Content MCP `configure_github_pages` so it passes
+   the engine pin to the build.
+4. Review and publish explicit non-article content changes through Content MCP,
+   then monitor `blog_status` until successful live verification.
+5. Article previews use the configured engine pin. If the pin or production
+   baseline changes, restage, inspect, and obtain fresh article approval.
+
+GitHub Pages remains the default host. Cloudflare configuration is retained but
+its new lifecycle publication implementation is not available yet.

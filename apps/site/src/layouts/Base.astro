@@ -2,7 +2,7 @@
 import "../styles/global.css";
 import { readSettings } from "@agentic-blog/content-contract";
 const settings = await readSettings();
-const { title = settings.site.title } = Astro.props;
+const { title = settings.site.title, revision } = Astro.props;
 const cloudflareWebAnalyticsToken = import.meta.env.PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN;
 ---
 <!doctype html>
@@ -10,6 +10,7 @@ const cloudflareWebAnalyticsToken = import.meta.env.PUBLIC_CLOUDFLARE_WEB_ANALYT
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
+    {revision && <meta name="agentic-blog-revision" content={revision} />}
     <title>{title} · {settings.site.title}</title>
     <meta name="description" content={settings.site.description} />
     <link rel="icon" type="image/svg+xml" href="/assets/engineers-note-mark.svg" />

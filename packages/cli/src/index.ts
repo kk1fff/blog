@@ -52,7 +52,7 @@ async function setup() {
   await command("npx", ["playwright", "install", "chromium"]);
   const skills = await installSkills();
   const mcp = await ensureMcp();
-  console.log(JSON.stringify({ root, content, createdContent, skills, mcp, next: "Restart Codex, then use $agentic-blog-setup to finish GitHub and Cloudflare configuration." }, null, 2));
+  console.log(JSON.stringify({ root, content, createdContent, skills, mcp, next: "Restart Codex, then use $agentic-blog-setup to finish GitHub Pages configuration (Cloudflare Pages is an explicit alternative)." }, null, 2));
 }
 async function doctor() {
   const report: Record<string, unknown> = { root, content, contentRepository: await exists(path.join(content, ".git")), blogSettings: await exists(path.join(content, "blog.yaml")), packagesBuilt: await exists(path.join(root, "packages/content-mcp/dist/index.js")) };

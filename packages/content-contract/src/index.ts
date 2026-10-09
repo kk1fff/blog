@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
 import { parse, stringify } from "yaml";
+import { writeManagedFile } from "./lifecycle.js";
 
 export type DeliveryMode = "unset" | "push" | "pr";
 export type ThemeId = "paper" | "journal" | "mono";
@@ -20,6 +21,7 @@ export interface GiscusSettings {
 }
 
 export interface BlogSettings {
+  hosting?: "github-pages" | "cloudflare-pages";
   site: { title: string; description: string; language: string; baseUrl?: string; author?: AuthorProfile };
   theme: ThemeId;
   comments?: { giscus: GiscusSettings };
@@ -28,6 +30,9 @@ export interface BlogSettings {
   cloudflare?: { projectName: string; productionBranch: string };
   githubPages?: { productionBranch: string };
 }
+
+export * from "./lifecycle.js";
+export * from "./deployment.js";
 
 export interface Post {
   slug: string;
@@ -80,7 +85,7 @@ export async function readSettings(dir = contentDir()): Promise<BlogSettings> {
 
 export async function writeSettings(settings: BlogSettings, dir = contentDir()): Promise<void> {
   await fs.mkdir(dir, { recursive: true });
-  await fs.writeFile(path.join(dir, "blog.yaml"), stringify(settings), "utf8");
+  await writeManagedFile(dir, "blog.yaml", stringify(settings));
 }
 
 export function postFromFile(file: string, raw: string): Post {
@@ -115,6 +120,11 @@ export async function listPosts(dir = contentDir(), includeDrafts = false): Prom
   }
 }
 
+/** Site visibility is determined by the build mode, never by local lifecycle storage. */
+export async function listRenderablePosts(dir = contentDir()) {
+  return listPosts(dir, process.env.BLOG_PREVIEW_LOCAL === "1");
+}
+
 export async function getPost(slug: string, dir = contentDir()): Promise<Post | undefined> {
   const file = path.join(dir, "posts", `${slugify(slug)}.md`);
   try { return postFromFile(file, await fs.readFile(file, "utf8")); }
@@ -133,7 +143,7 @@ export async function writePost(input: Omit<Post, "path">, dir = contentDir()): 
     ...(input.updatedAt ? { updatedAt: input.updatedAt } : {}),
     draft: Boolean(input.draft)
   };
-  await fs.writeFile(file, matter.stringify(`${input.body.trim()}\n`, data), "utf8");
+  await writeManagedFile(dir, `posts/${slug}.md`, matter.stringify(`${input.body.trim()}\n`, data));
   return (await getPost(slug, dir))!;
 }
 
@@ -191,6 +201,8 @@ jobs:
         env:
           BLOG_CONTENT_DIR: \${{ github.workspace }}/content
           BLOG_OUTPUT_DIR: \${{ github.workspace }}/engine/.agentic-blog/github-pages-dist
+          BLOG_PREVIEW_LOCAL: "0"
+          BLOG_ENGINE_COMMIT: \${{ vars.BLOG_ENGINE_COMMIT }}
           PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN: \${{ vars.CLOUDFLARE_WEB_ANALYTICS_TOKEN }}
         run: |
           npm ci
